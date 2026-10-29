@@ -25,10 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 TARGET = "http://127.0.0.1:8100"
 PREFIX = "/floorplan"
 
-# hop-by-hop headers plus the ones the proxy or aiohttp must own itself
+# hop-by-hop headers plus the ones the proxy or aiohttp must own itself.
+# "host" is deliberately NOT skipped: the container must see the address the
+# browser used, or every URL it builds (login redirect, client id) is wrong.
 _SKIP = {
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
-    "te", "trailer", "transfer-encoding", "upgrade", "host",
+    "te", "trailer", "transfer-encoding", "upgrade",
     "content-length", "content-encoding", "accept-encoding",
 }
 
