@@ -498,7 +498,11 @@ async def auth_login(request):
     if not HA_LOGIN:
         raise web.HTTPNotFound()
     state = secrets.token_urlsafe(24)
-    cid = hl.app_base(APP_URL, "https" if is_https(request) else "http", request.host)
+    # behind the reverse proxy of a Home Assistant integration the page lives in a
+    # sub-path (/floorplan/): the client id and the redirect back must carry it
+    prefix = (request.headers.get("X-Forwarded-Prefix") or "").strip().rstrip("/")
+    scheme = "https" if is_https(request) else "http"
+    cid = hl.app_base(APP_URL, scheme, request.host).rstrip("/") + (prefix + "/" if prefix else "/")
     authorize = hl.authorize_url(hl.browser_ha(HA_URL or HA_API, HA_PUBLIC_URL, request.host), cid, state)
     login = {"state": state, "cid": cid, "q": request.rel_url.raw_query_string[:1000], "exp": int(time.time()) + hl.LOGIN_SECONDS}
     data = json.dumps({"back": hl.back_to(login["q"]), "authorize": authorize}).replace("</", "<\\/")
