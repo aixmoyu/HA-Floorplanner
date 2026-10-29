@@ -492,14 +492,37 @@ def auth_page(status: int, de: str, en: str, link: str, link_de: str, link_en: s
 
 
 async def auth_login(request):
-    """to Home Assistant's login page; it comes back to auth/callback (the page's address is the client id)"""
+    """to Home Assistant's login page; it comes back to auth/callback (the page's address is the client id). The page first tries the
+    single sign-on (auth/sso): behind the same reverse proxy as Home Assistant it shares its localStorage, whose tokens say who is
+    looking — no second login. Without them (another browser, incognito) it goes on to Home Assistant's login page as before."""
     if not HA_LOGIN:
         raise web.HTTPNotFound()
     state = secrets.token_urlsafe(24)
     cid = hl.app_base(APP_URL, "https" if is_https(request) else "http", request.host)
-    resp = web.Response(status=302, headers={"Cache-Control": "no-store",
-                                             "Location": hl.authorize_url(hl.browser_ha(HA_URL or HA_API, HA_PUBLIC_URL, request.host), cid, state)})
+    authorize = hl.authorize_url(hl.browser_ha(HA_URL or HA_API, HA_PUBLIC_URL, request.host), cid, state)
     login = {"state": state, "cid": cid, "q": request.rel_url.raw_query_string[:1000], "exp": int(time.time()) + hl.LOGIN_SECONDS}
+    data = json.dumps({"back": hl.back_to(login["q"]), "authorize": authorize}).replace("</", "<\\/")
+    resp = web.Response(status=200, content_type="text/html", headers={"Cache-Control": "no-store"}, text=f"""<!doctype html>
+<html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width">
+<title>3D Floorplan</title><body style="font-family:system-ui,sans-serif;margin:2em;line-height:1.5">
+<h2>3D Floorplan</h2><p id=msg></p>
+<script id="fp-sso" type="application/json">{data}</script>
+<script>
+(() => {{
+  const d = JSON.parse(document.getElementById("fp-sso").textContent);
+  const go = () => location.replace(d.authorize);
+  try {{
+    const raw = localStorage.getItem("hassTokens");
+    if (!raw) return go();
+    const t = JSON.parse(raw);
+    fetch("sso", {{method: "POST", headers: {{"Content-Type": "application/json"}},
+      body: JSON.stringify({{tokens: {{access_token: t.access_token, refresh_token: t.refresh_token, client_id: t.client_id || t.hassUrl}}}})}})
+      .then((r) => (r.ok ? location.replace(d.back) : go())).catch(go);
+  }} catch (e) {{ go(); }}
+}})();
+</script>
+<noscript><meta http-equiv="refresh" content="0;url={html.escape(authorize, quote=True)}"><p><a href="{html.escape(authorize, quote=True)}">Log in</a></p></noscript>
+</body></html>""")
     resp.set_cookie(hl.LOGIN_COOKIE, hl.sign(login, login_key(request)),
                     max_age=hl.LOGIN_SECONDS, path="/", httponly=True, samesite="Lax", secure=is_https(request))
     return resp
@@ -534,6 +557,70 @@ async def ha_login_user(code: str, client_id: str):
     except Exception as err:  # noqa: BLE001 - not reachable, an odd answer: no login
         log.warning("Login with Home Assistant failed (%s)", err)
         return None
+
+
+async def ha_token_user(token: str):
+    """the user of an existing Home Assistant access token (auth/current_user), None when Home Assistant does not take it"""
+    base = hl.ha_base(HA_URL or HA_API)
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as s:
+            async with s.ws_connect(ha_ws_url()) as ws:
+                await asyncio.wait_for(ws.receive_json(), 5)                                   # auth_required
+                await ws.send_json({"type": "auth", "access_token": token})
+                if (await asyncio.wait_for(ws.receive_json(), 5)).get("type") != "auth_ok":
+                    return None
+                await ws.send_json({"id": 1, "type": "auth/current_user"})
+                res = await asyncio.wait_for(ws.receive_json(), 5)
+                return res.get("result") if res.get("success") else None
+    except Exception as err:  # noqa: BLE001 - not reachable, an odd answer: no login
+        log.warning("Single sign-on with Home Assistant failed (%s)", err)
+        return None
+
+
+async def ha_refresh_user(refresh_token: str, client_id: str):
+    """the user of a refresh token: Home Assistant grants a fresh access token for it (the client id must be its own)"""
+    base = hl.ha_base(HA_URL or HA_API)
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as s:
+            async with s.post(f"{base}/auth/token", data={"grant_type": "refresh_token",
+                                                          "refresh_token": refresh_token, "client_id": client_id}) as r:
+                tok = await r.json(content_type=None) if r.status == 200 else None
+            if not isinstance(tok, dict) or not isinstance(tok.get("access_token"), str):
+                return None
+            return await ha_token_user(tok["access_token"])
+    except Exception as err:  # noqa: BLE001 - not reachable, an odd answer: no login
+        log.warning("Single sign-on with Home Assistant failed (%s)", err)
+        return None
+
+
+async def auth_sso(request):
+    """single sign-on from the same origin (#489 behind the same reverse proxy as Home Assistant): the page shares Home Assistant's
+    localStorage, its tokens say who is looking. They are checked against Home Assistant itself, then this add-on's own session starts."""
+    if not HA_LOGIN:
+        raise web.HTTPNotFound()
+    try:
+        data = await request.json()
+    except ValueError:
+        return web.json_response({"error": "invalid JSON"}, status=400)
+    tokens = data.get("tokens") if isinstance(data, dict) else None
+    if not isinstance(tokens, dict):
+        return web.json_response({"error": "no tokens"}, status=400)
+    user = None
+    if isinstance(tokens.get("access_token"), str) and tokens["access_token"]:
+        user = await ha_token_user(tokens["access_token"])
+    if user is None and isinstance(tokens.get("refresh_token"), str) and tokens["refresh_token"] \
+            and isinstance(tokens.get("client_id"), str) and tokens["client_id"]:
+        user = await ha_refresh_user(tokens["refresh_token"], tokens["client_id"])
+    if not isinstance(user, dict) or not user.get("id"):
+        return web.json_response({"error": "Home Assistant did not take the tokens"}, status=401)
+    await load_admin_ids()
+    sess = hl.new_session(user, _admin_cache["byid"].get(user.get("id")), time.time())
+    if not sess:
+        return web.json_response({"error": "Home Assistant did not confirm the login"}, status=502)
+    resp = web.json_response({"ok": True})
+    set_session(request, resp, sess)
+    log.info("%s logged in by single sign-on", sess["user"] or sess["name"] or sess["id"])
+    return resp
 
 
 async def auth_callback(request):
@@ -4178,6 +4265,7 @@ def make_app(data_path: Path | None = None, config_path: Path | None = None) -> 
     app.add_routes([
         web.get("/", index),
         web.get("/auth/login", auth_login),
+        web.post("/auth/sso", auth_sso),
         web.get("/auth/callback", auth_callback),
         web.get("/auth/logout", auth_logout),
         web.get("/api/users-file", get_users_file),

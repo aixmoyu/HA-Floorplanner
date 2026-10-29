@@ -1,5 +1,8 @@
 """The add-on without the Supervisor (Home Assistant as a Docker container, #489): only who logged in with Home Assistant gets the page and
-its data, the Ingress headers count for nothing, the login comes back only to the browser that started it."""
+its data, the Ingress headers count for nothing, the login comes back only to the browser that started it, and the single sign-on (the page
+shares Home Assistant's localStorage behind the same reverse proxy) takes the tokens of its frontend."""
+import json
+import re
 import sys
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -22,8 +25,13 @@ async def ha(aiohttp_server, monkeypatch):
     async def token(request):
         f = await request.post()
         seen["codes"].append(dict(f))
+        if f.get("grant_type") == "refresh_token":
+            if f.get("refresh_token") == "r1" and f.get("client_id") == seen.get("refresh_cid"):
+                return web.json_response({"access_token": "user-tok", "refresh_token": "r1", "expires_in": 1800, "token_type": "Bearer"})
+            return web.json_response({"error": "invalid_request"}, status=400)
         if f.get("grant_type") != "authorization_code" or f.get("code") != "good" or f.get("client_id") != seen.get("cid"):
             return web.json_response({"error": "invalid_request"}, status=400)
+        seen["refresh_cid"] = f.get("client_id")
         return web.json_response({"access_token": "user-tok", "refresh_token": "r1", "expires_in": 1800, "token_type": "Bearer"})
 
     async def revoke(request):
@@ -61,8 +69,10 @@ async def ha(aiohttp_server, monkeypatch):
 
 async def login(c, ha, code="good", query=""):
     r = await c.get("/auth/login" + query, allow_redirects=False)
-    assert r.status == 302
-    u = urlsplit(r.headers["Location"])
+    assert r.status == 200 and hl.LOGIN_COOKIE in r.cookies
+    m = re.search(r'<script id="fp-sso" type="application/json">(.*?)</script>', await r.text(), re.S)
+    data = json.loads(m.group(1))
+    u = urlsplit(data["authorize"])
     q = {k: v[0] for k, v in parse_qs(u.query).items()}
     assert u.path == "/auth/authorize" and u.port == ha["port"] and q["redirect_uri"] == q["client_id"] + "auth/callback"
     ha["cid"] = q["client_id"]
@@ -145,9 +155,41 @@ async def test_logout_and_a_cookie_that_runs_low(aiohttp_client, tmp_path, ha, m
     assert (await c.get("/api/me")).status == 401
 
 
+async def test_sso_from_the_shared_local_storage(aiohttp_client, tmp_path, ha):
+    """the page behind the same reverse proxy as Home Assistant reads its frontend's tokens: logged in without the second login"""
+    c = await aiohttp_client(server.make_app(tmp_path))
+    # an access token Home Assistant takes ("user-tok"): in without the authorize flow
+    r = await c.post("/auth/sso", json={"tokens": {"access_token": "user-tok"}})
+    assert r.status == 200 and hl.SESSION_COOKIE in r.cookies
+    me = await (await c.get("/api/me")).json()
+    assert me["user"] == "anna" and me["canEdit"] is False and me["login"] is True
+    r = await c.put("/api/layout", json={"version": 1, "floors": []})
+    assert r.status == 403                                              # Anna is no editor, as with the usual login
+    # an expired access token, but the refresh token is the frontend's: Home Assistant grants a fresh one
+    ha["refresh_cid"] = "https://ha.ts.aimoyu.tech"
+    c2 = await aiohttp_client(server.make_app(tmp_path))
+    r = await c2.post("/auth/sso", json={"tokens": {"access_token": "stale-tok", "refresh_token": "r1", "client_id": "https://ha.ts.aimoyu.tech"}})
+    assert r.status == 200 and (await (await c2.get("/api/me")).json())["user"] == "anna"
+    # the refresh token of another client or nothing that works: no session
+    c3 = await aiohttp_client(server.make_app(tmp_path))
+    r = await c3.post("/auth/sso", json={"tokens": {"access_token": "stale-tok", "refresh_token": "r1", "client_id": "https://other.example"}})
+    assert r.status == 401 and hl.SESSION_COOKIE not in r.cookies
+    assert (await c3.get("/api/me")).status == 401
+    r = await c3.post("/auth/sso", json={"tokens": {"access_token": "user-tok"}})
+    assert r.status == 200                                              # the second browser can still log in
+
+
+async def test_sso_rejects_bad_input(aiohttp_client, tmp_path, ha):
+    c = await aiohttp_client(server.make_app(tmp_path))
+    assert (await c.post("/auth/sso", json={})).status == 400
+    assert (await c.post("/auth/sso", json={"tokens": {"access_token": "nope"}})).status == 401
+    assert hl.SESSION_COOKIE not in c.session.cookie_jar
+
+
 async def test_with_the_supervisor_no_login(client, monkeypatch):
     monkeypatch.setattr(server, "HA_LOGIN", False)
     assert (await client.get("/auth/login", allow_redirects=False)).status == 404
+    assert (await client.post("/auth/sso", json={"tokens": {}})).status == 404
     assert (await client.get("/api/me")).status == 200
 
 

@@ -1,6 +1,6 @@
 {
  "version": "4.42.0",
- "buildHash": "dcb322c9fe6f110a68baf9a479137e14dbdfad18c47896f51fb69fdfec917960",
+ "buildHash": "d756c8a5dfe9d55430a47a30cabfdba83655e272438028596e3ac7cf006a239b",
  "files": {
   "alarmnotify.py": "be1a38dc996818d78acc29dd078152b4b92698c6238a0e4fab7b318fbe1c0ef9",
   "boards.py": "93f9689ec835ea2068afa850fe05c2b666f9a23775afd275895f3fd68eec4b92",
@@ -148,7 +148,7 @@
   "roomsensors.py": "dafc62857b2b4557d5413ac48c19879a6a7d38181dfa06ebc51d729479f6235f",
   "rulesrun.py": "5f458db62e2960dd3b21e3f9df1a54c4ee47f0948fcf006db3aabfa4af0cdd0b",
   "scenes.py": "a2497243e15b713d02810a6a6fa0942902490200a3593e0ef9f17ec92ec95cb0",
-  "server.py": "038435ce50ad7a7242d2bad95726c20a79e11828227b57350e05bcb9b7379d95",
+  "server.py": "8bcaf3d0abf10b0d05083061f5ae723f36ec067864c4e308aaf4490175a375a3",
   "static/alerts.js": "099108c279cdf2ea1008180d0d73dbe18b10aa4d63365a83bfde1cf7c2a4a803",
   "static/alertsui.js": "503c006f839253eb31f5e2adb4e6612d21fd657b8691956fd095546dce5177ea",
   "static/app.js": "4615e7dc9456b32c57f66d64819f8b3cb9d54b1daba52b5b3ca80535326116d2",
