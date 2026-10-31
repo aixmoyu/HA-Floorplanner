@@ -17,6 +17,13 @@ export const SHUTTER_STYLES = ['roller', 'left', 'right', 'split'];
 export const hasShutter = (o) => o?.type === 'window' && !!o.shutter;
 /** how the cover of o opens: 'roller' (up/down, also the default of older windows), 'left', 'right' or 'split'; null without one */
 export const curtainStyle = (o) => (hasShutter(o) ? (SHUTTER_STYLES.includes(o.shutterStyle) ? o.shutterStyle : 'roller') : null);
+/** which side of the window the cover hangs on: 'in' (room side, the default for a cloth curtain) or 'out' (facade, the default for a
+ *  roller shutter), unless the window sets it (o.curtainSide: 'in' / 'out') */
+export function curtainSide(o) {
+  const own = o?.curtainSide;
+  if (own === 'in' || own === 'out') return own;
+  return curtainStyle(o) === 'roller' ? 'out' : 'in';
+}
 /** the style of a cover: 'roller' is the default and is not stored (older layouts stay as they are) */
 export function setShutterStyle(o, s) {
   if (!hasShutter(o)) return o;
@@ -142,7 +149,7 @@ export function shutterSlats(h, pitch = 0.07) {
 }
 /** how far from the middle of the wall a roller shutter hangs: between the glass and the face of a wall of thickness t, never outside it */
 export const curtainDepth = (t) => Math.max(0.015, Math.min(0.06, t / 2 - 0.015));
-/** how far from the middle of the wall a cloth curtain hangs on the inside: past the face of the wall, into the room */
+/** how far from the middle of the wall a cloth curtain hangs: past the face of the wall, on the same side as the roller shutter */
 export const curtainHangDepth = (t) => Math.max(0.06, t / 2 + 0.06);
 /** which side of wall w the roller shutter of window o hangs on, in the wall's local z (+1: the side of the normal (-dz, dx), as in the
  *  2D plan; -1: the other one): outside, where there is no room of the floor (rooms) while there is one on the other side; the front wall
