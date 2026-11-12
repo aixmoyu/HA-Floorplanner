@@ -1,0 +1,35 @@
+{
+ "id": "tabs",
+ "lang": "en",
+ "steps": [
+  {
+   "t": 5.54,
+   "de": "Unten rechts: „Bearbeiten“.",
+   "en": "Bottom right: “Edit”."
+  },
+  {
+   "t": 8.17,
+   "de": "„Reiter“ macht die Leiste unten bearbeitbar.",
+   "en": "“Tabs” makes the bar at the bottom editable."
+  },
+  {
+   "t": 10.85,
+   "de": "Einen Reiter ziehen, um ihn zu verschieben.",
+   "en": "Drag a tab to move it."
+  },
+  {
+   "t": 14.56,
+   "de": "„＋ Seite“ legt eine eigene Seite an.",
+   "en": "“＋ Page” creates a page of your own."
+  },
+  {
+   "t": 16.89,
+   "de": "„Fertig“, wenn alles passt.",
+   "en": "“Done” when everything fits."
+  }
+ ],
+ "duration": 20.06,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

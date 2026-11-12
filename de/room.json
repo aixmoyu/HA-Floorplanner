@@ -1,0 +1,35 @@
+{
+ "id": "room",
+ "lang": "de",
+ "steps": [
+  {
+   "t": 0.4,
+   "de": "Tippe auf den Namen eines Raums.",
+   "en": "Tap the name of a room."
+  },
+  {
+   "t": 5.56,
+   "de": "Die Kamera fährt hin, rechts öffnet sich der Raum.",
+   "en": "The camera flies there and the room opens on the right."
+  },
+  {
+   "t": 6.76,
+   "de": "Hier schaltest du alle Lampen des Raums auf einmal.",
+   "en": "Here you switch all lamps of the room at once."
+  },
+  {
+   "t": 9.13,
+   "de": "Weiter unten: jede Lampe einzeln, die Heizung und mehr.",
+   "en": "Further down: every lamp on its own, the heating and more."
+  },
+  {
+   "t": 13.39,
+   "de": "Mit ✕ ist der Raum wieder zu.",
+   "en": "✕ closes the room again."
+  }
+ ],
+ "duration": 17.89,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

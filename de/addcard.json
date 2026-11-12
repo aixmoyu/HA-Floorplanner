@@ -1,0 +1,40 @@
+{
+ "id": "addcard",
+ "lang": "de",
+ "steps": [
+  {
+   "t": 5.73,
+   "de": "Unten rechts: „Bearbeiten“.",
+   "en": "Bottom right: “Edit”."
+  },
+  {
+   "t": 8.36,
+   "de": "„＋ Karte hinzufügen“.",
+   "en": "“＋ Add card”."
+  },
+  {
+   "t": 10.88,
+   "de": "Wähle, was die Karte zeigen soll: ein Thermostat.",
+   "en": "Choose what the card shows: a thermostat."
+  },
+  {
+   "t": 13.19,
+   "de": "Dann welches Gerät.",
+   "en": "Then which device."
+  },
+  {
+   "t": 15.07,
+   "de": "„Speichern“: die Karte steht auf der Seite.",
+   "en": "“Save”: the card is on the page."
+  },
+  {
+   "t": 17.89,
+   "de": "„Fertig“ beendet das Bearbeiten.",
+   "en": "“Done” ends editing."
+  }
+ ],
+ "duration": 21.78,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

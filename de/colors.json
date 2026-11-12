@@ -1,0 +1,35 @@
+{
+ "id": "colors",
+ "lang": "de",
+ "steps": [
+  {
+   "t": 0.4,
+   "de": "Unten wählst du, was die Räume zeigen.",
+   "en": "At the bottom you choose what the rooms show."
+  },
+  {
+   "t": 4.77,
+   "de": "„Temp.“: warme Räume rot, kühle blau.",
+   "en": "“Temp.”: warm rooms red, cool rooms blue."
+  },
+  {
+   "t": 5.97,
+   "de": "„Feuchte“ zeigt die Luftfeuchte.",
+   "en": "“Humidity” shows the humidity."
+  },
+  {
+   "t": 10.06,
+   "de": "„CO₂“ zeigt, wo gelüftet werden sollte.",
+   "en": "“CO₂” shows where you should open a window."
+  },
+  {
+   "t": 14.14,
+   "de": "„Normal“ zeigt wieder das Haus, wie es ist.",
+   "en": "“Normal” shows the house as it is again."
+  }
+ ],
+ "duration": 18.73,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

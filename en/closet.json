@@ -1,0 +1,30 @@
+{
+ "id": "closet",
+ "lang": "en",
+ "steps": [
+  {
+   "t": 0.4,
+   "de": "Der Schrank steht im Dachgeschoss unter der Schräge.",
+   "en": "The closet stands in the attic under the slope."
+  },
+  {
+   "t": 8.07,
+   "de": "Rechts: „Schrank bearbeiten“.",
+   "en": "On the right: “Edit closet”."
+  },
+  {
+   "t": 19.05,
+   "de": "Fächer, Schubladen und Türen je Spalte; die Schräge schneidet ihn passend ab.",
+   "en": "Shelves, drawers and doors per column; the slope cuts it to fit."
+  },
+  {
+   "t": 29.72,
+   "de": "„3D“ zeigt ihn von vorn.",
+   "en": "“3D” shows it from the front."
+  }
+ ],
+ "duration": 50.57,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

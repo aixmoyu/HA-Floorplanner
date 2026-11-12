@@ -1,0 +1,35 @@
+{
+ "id": "heatplan",
+ "lang": "de",
+ "steps": [
+  {
+   "t": 4.47,
+   "de": "Unter „Klima“ oben auf „Heizplan“.",
+   "en": "Under “Climate” tap “Schedule” at the top."
+  },
+  {
+   "t": 7.59,
+   "de": "Wähle einen Raum.",
+   "en": "Pick a room."
+  },
+  {
+   "t": 10.8,
+   "de": "Jeder Tag ist eine Reihe aus Blöcken: dunkel ist Nacht, hell ist Komfort.",
+   "en": "Every day is a row of blocks: dark is night, bright is comfort."
+  },
+  {
+   "t": 13.0,
+   "de": "Die Kante eines Blocks ziehen: darüber steht die genaue Uhrzeit.",
+   "en": "Drag the edge of a block: the exact time shows above it."
+  },
+  {
+   "t": 18.13,
+   "de": "Oben stellst du ein, wie warm Nacht, Eco und Komfort sind.",
+   "en": "At the top you set how warm night, eco and comfort are."
+  }
+ ],
+ "duration": 21.03,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}

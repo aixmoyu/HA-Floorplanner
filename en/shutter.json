@@ -1,0 +1,30 @@
+{
+ "id": "shutter",
+ "lang": "en",
+ "steps": [
+  {
+   "t": 0.4,
+   "de": "Tippe auf den Raum mit dem Rollladen.",
+   "en": "Tap the room with the shutter."
+  },
+  {
+   "t": 5.91,
+   "de": "Tippe auf die Kugel des Rollladens.",
+   "en": "Tap the ball of the shutter."
+  },
+  {
+   "t": 7.85,
+   "de": "„Schließen“ fährt ihn herunter, auch im Bild.",
+   "en": "“Close” lowers it, in the picture too."
+  },
+  {
+   "t": 12.43,
+   "de": "„Öffnen“ fährt ihn wieder hoch.",
+   "en": "“Open” raises it again."
+  }
+ ],
+ "duration": 17.82,
+ "version": "5.7.1",
+ "date": "2026-11-12",
+ "slow": 2.0
+}
